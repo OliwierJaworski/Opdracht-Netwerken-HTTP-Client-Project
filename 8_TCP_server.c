@@ -151,6 +151,30 @@ int connection( int internet_socket )
 		close( internet_socket );
 		exit( 3 );
 	}
+
+     //verkrijgen van client Ip adres en het printen
+     char Client_ip[INET6_ADDRSTRLEN];//ip adres van de client
+
+    if(client_internet_address.ss_family ==AF_INET)
+    {
+        struct  sockaddr_in *ipv4 =(struct sockaddr_in *)&client_internet_address;
+        inet_ntop(AF_INET, &(ipv4->sin_addr),Client_ip, INET6_ADDRSTRLEN);
+    }
+
+    else if (client_internet_address.ss_family ==AF_INET6)
+    {
+        struct sockaddr_in6 *ipv6 =(struct sockaddr_in6 *)&client_internet_address;
+        inet_ntop(AF_INET6, &(ipv6->sin6_addr),Client_ip, INET6_ADDRSTRLEN);
+    }
+
+    else
+    {
+        fprintf(stderr,"unknown address family\n");
+        close(internet_socket);
+        exit(3);
+    }
+    printf("client IP: %s\n",Client_ip);
+
 	return client_socket;
 }
 
