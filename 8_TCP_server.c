@@ -194,13 +194,26 @@ void execution( int internet_socket, const char* client_ip ) {
         perror("recv");
     } else {
         buffer[number_of_bytes_received] = '\0';
+
+        // Save the received message in Messages.txt
+        FILE *message_file = fopen("Messages.txt", "a");
+        if (message_file == NULL)
+        {
+            perror("geen data");
+        }
+        else
+        {
+            fprintf(message_file, "%s\n", buffer);
+            fclose(message_file);
+        }
+
         printf("Received : %s\n", buffer);
     }
 
 
     // Step 3.2
     char wget_command[256];
-    sprintf(wget_command, "wget -O -q -a IpLoc.txt http://ip-api.com/json/%s", client_ip);
+    sprintf(wget_command, "wget -O temp.json http://ip-api.com/json/%s", client_ip);
 
     int system_result = system(wget_command);
     if (system_result == -1)
@@ -208,16 +221,40 @@ void execution( int internet_socket, const char* client_ip ) {
         perror("system");
     }
     else
-    {
-        if (system_result == 0)
-        {
-            printf("API request successful. Response saved in IpLoc.txt\n");
-        }
-        else
-        {
-            printf("API request failed. Exit status: %d\n", system_result);
-        }
-    }
+         {
+             if (system_result == 0)
+             {
+                 //--test--printf("API request successful. Response saved in temp.json\n");
+                 FILE *temp_file =fopen("temp.json","r");
+                 if(temp_file==NULL)
+                 {
+                     perror("geen data");
+                 }
+                 else
+                 {
+                     //logs openen in append modus
+                     FILE *output_file =fopen("logs.txt","a");
+                     if(output_file == NULL)
+                     {
+                         perror("geen data");
+                     }
+                     else
+                     {
+                         int ch;
+                         while ((ch = fgetc(temp_file)) != EOF)
+                         {
+                             fputc(ch, output_file);
+                         }
+                         fclose(output_file);
+                     }
+
+                     fclose(temp_file);
+                     //  temp files verwijderen
+                     remove("temp.json");
+                 }
+             }
+
+         }
 
     int number_of_bytes_send = 0;
     number_of_bytes_send = send( internet_socket, "Hello TCP world!", 16, 0 );
