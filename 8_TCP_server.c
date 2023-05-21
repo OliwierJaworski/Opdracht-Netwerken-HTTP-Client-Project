@@ -38,8 +38,10 @@ void OSCleanup( void ) {}
 
 int initialization();
 int connection( int internet_socket );
-void execution( int internet_socket );
+void execution( int internet_socket, const char* client_ip );
 void cleanup( int internet_socket, int client_internet_socket );
+
+char Client_ip[INET6_ADDRSTRLEN];//ip adres van de client
 
 int main( int argc, char * argv[] )
 {
@@ -61,7 +63,7 @@ int main( int argc, char * argv[] )
     //Execution//
     /////////////
 
-    execution( client_internet_socket );
+    execution(client_internet_socket, Client_ip);
 
 
     ////////////
@@ -139,8 +141,11 @@ int initialization()
     return internet_socket;
 }
 
+
+
 int connection( int internet_socket )
 {
+
     //Step 2.1
     struct sockaddr_storage client_internet_address;
     socklen_t client_internet_address_length = sizeof client_internet_address;
@@ -153,7 +158,7 @@ int connection( int internet_socket )
     }
 
     //verkrijgen van client Ip adres en het printen
-    char Client_ip[INET6_ADDRSTRLEN];//ip adres van de client
+
 
     if(client_internet_address.ss_family ==AF_INET)
     {
@@ -178,23 +183,40 @@ int connection( int internet_socket )
     return client_socket;
 }
 
-void execution( int internet_socket )
-{
+void execution( int internet_socket, const char* client_ip ) {
     //Step 3.1
     int number_of_bytes_received = 0;
     char buffer[1000];
-    number_of_bytes_received = recv( internet_socket, buffer, ( sizeof buffer ) - 1, 0 );
-    if( number_of_bytes_received == -1 )
+    number_of_bytes_received = recv(internet_socket, buffer, (sizeof buffer) - 1, 0);
+    if (number_of_bytes_received == -1) {
+        perror("recv");
+    } else {
+        buffer[number_of_bytes_received] = '\0';
+        printf("Received : %s\n", buffer);
+    }
+
+    
+    // Step 3.2
+    char wget_command[256];
+    sprintf(wget_command, "wget -O IpLoc.txt http://ip-api.com/json/%s", client_ip);
+
+    int system_result = system(wget_command);
+    if (system_result == -1)
     {
-        perror( "recv" );
+        perror("system");
     }
     else
     {
-        buffer[number_of_bytes_received] = '\0';
-        printf( "Received : %s\n", buffer );
+        if (system_result == 0)
+        {
+            printf("API request successful. Response saved in IpLoc.txt\n");
+        }
+        else
+        {
+            printf("API request failed. Exit status: %d\n", system_result);
+        }
     }
 
-    //Step 3.2
     int number_of_bytes_send = 0;
     number_of_bytes_send = send( internet_socket, "Hello TCP world!", 16, 0 );
     if( number_of_bytes_send == -1 )
