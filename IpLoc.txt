@@ -1,1 +1,33 @@
-{"status":"fail","message":"reserved range","query":"::1"}
+{"status":"success","country":"Belgium","countryCode":"BE","region":"VLG","regionName":"Flanders","city":"Sint-Truiden","zip":"3800","lat":50.8195,"lon":5.1863,"timezone":"Europe/Brussels","isp":"Telenet BVBA","org":"Telenet N.V.","as":"AS6848 Telenet BVBA","query":"2a02:1810:8c27:b200:c889:50d0:722a:ab8b"}--2023-05-21 15:39:54--  http://ip-api.com/json/2a02:1810:8c27:b200:c889:50d0:722a:ab8b
+Resolving ip-api.com (ip-api.com)... 208.95.112.1
+Connecting to ip-api.com (ip-api.com)|208.95.112.1|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 308 [application/json]
+Saving to: '-q'
+
+     0K                                                       100% 8.05M=0s
+
+2023-05-21 15:39:54 (8.05 MB/s) - '-q' saved [308/308]
+
+--2023-05-21 15:40:29--  http://ip-api.com/json/2a02:1810:8c27:b200:c889:50d0:722a:ab8b
+Resolving ip-api.com (ip-api.com)... 208.95.112.1
+Connecting to ip-api.com (ip-api.com)|208.95.112.1|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 308 [application/json]
+Saving to: '-q'
+
+     0K                                                       100% 8.27M=0s
+
+2023-05-21 15:40:29 (8.27 MB/s) - '-q' saved [308/308]
+
+--2023-05-21 15:40:51--  http://ip-api.com/json/2a02:1810:8c27:b200:c889:50d0:722a:ab8b
+Resolving ip-api.com (ip-api.com)... 208.95.112.1
+Connecting to ip-api.com (ip-api.com)|208.95.112.1|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 308 [application/json]
+Saving to: '-q'
+
+     0K                                                       100% 9.09M=0s
+
+2023-05-21 15:40:51 (9.09 MB/s) - '-q' saved [308/308]
+

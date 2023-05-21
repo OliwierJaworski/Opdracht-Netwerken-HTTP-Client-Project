@@ -183,6 +183,8 @@ int connection( int internet_socket )
     return client_socket;
 }
 
+
+
 void execution( int internet_socket, const char* client_ip ) {
     //Step 3.1
     int number_of_bytes_received = 0;
@@ -195,10 +197,10 @@ void execution( int internet_socket, const char* client_ip ) {
         printf("Received : %s\n", buffer);
     }
 
-    
+
     // Step 3.2
     char wget_command[256];
-    sprintf(wget_command, "wget -O IpLoc.txt http://ip-api.com/json/%s", client_ip);
+    sprintf(wget_command, "wget -O -q -a IpLoc.txt http://ip-api.com/json/%s", client_ip);
 
     int system_result = system(wget_command);
     if (system_result == -1)
