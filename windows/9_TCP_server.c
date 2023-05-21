@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <curl/curl.h>
 
 void print_ip_address( unsigned short family, struct sockaddr * ip )
 {
