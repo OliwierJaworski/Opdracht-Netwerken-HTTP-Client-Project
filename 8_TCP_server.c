@@ -237,9 +237,9 @@ void logData(const char* ipAddress, const char* receivedData, const char* networ
 
 char* getGeoLocation(const char* ipAddress)
 {
-	// Create HTTP request
+	// Creeer HTTP aanvraag
 	char request[1000];
-	sprintf(request, "GET %s/%s HTTP/1.1\r\nHost: %s\r\n\r\n", API_ENDPOINT, ipAddress, API_KEY);
+	sprintf(request, "GET %s/%s HTTP/1.1\r\nHost: %s\r\n\r\n", API_ENDPOINT, ipAddress, 61439);
 
 	// Resolve API endpoint hostname
 	struct addrinfo hints, * res;
@@ -248,24 +248,24 @@ char* getGeoLocation(const char* ipAddress)
 	hints.ai_socktype = SOCK_STREAM;
 	getaddrinfo("api.ipgeolocationapi.com", "80", &hints, &res);
 
-	// Create socket and connect to the API endpoint
+	// Creeer socket en verbind tot api eindpunt
 	int api_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	connect(api_socket, res->ai_addr, res->ai_addrlen);
 
-	// Send the HTTP request
+	// verzend HTTP aanvraag
 	send(api_socket, request, strlen(request), 0);
 
-	// Receive and parse the HTTP response
+	// Receive en parse  HTTP antwoord
 	char response[10000];
 	recv(api_socket, response, sizeof(response), 0);
 
-	// Extract the geolocation data from the response
+	//  geolocatie data uit antwoord halen
 	char* start = strstr(response, "\r\n\r\n") + 4; // Skip HTTP headers
 	char* end = strchr(start, '}');
 	if (end != NULL)
 		*(end + 1) = '\0'; // Terminate the JSON string
 
-	// Create a copy of the geolocation data
+	// kopie van geolocatie data maken
 	char* geoLocation = strdup(start);
 
 	// Clean up
