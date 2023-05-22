@@ -2,3 +2,6 @@
 {"status":"fail","message":"reserved range","query":"::1"}
 {"status":"fail","message":"reserved range","query":"::1"}
 {"status":"fail","message":"reserved range","query":"::1"}
+{"status":"fail","message":"reserved range","query":"::1"}
+{"status":"success","country":"Belgium","countryCode":"BE","region":"VLG","regionName":"Flanders","city":"Sint-Truiden","zip":"3800","lat":50.8195,"lon":5.1863,"timezone":"Europe/Brussels","isp":"Telenet BVBA","org":"Telenet N.V.","as":"AS6848 Telenet BVBA","query":"2a02:1810:8c27:b200:1953:ce3f:ac0d:62b6"}
+{"status":"fail","message":"reserved range","query":"::1"}
