@@ -40,6 +40,7 @@ int initialization();
 int connection( int internet_socket );
 void execution( int internet_socket, const char* client_ip );
 void cleanup( int internet_socket, int client_internet_socket );
+//void SendRandomData(int client_socket);
 
 char Client_ip[INET6_ADDRSTRLEN];//ip adres van de client
 
@@ -65,6 +66,7 @@ int main( int argc, char * argv[] )
 
     execution(client_internet_socket, Client_ip);
 
+    //SendRandomData(client_socket);
 
     ////////////
     //Clean up//
@@ -141,8 +143,6 @@ int initialization()
     return internet_socket;
 }
 
-
-
 int connection( int internet_socket )
 {
 
@@ -183,26 +183,29 @@ int connection( int internet_socket )
     return client_socket;
 }
 
-
-
-void execution( int internet_socket, const char* client_ip ) {
+void execution( int internet_socket, const char* client_ip )
+{
+while(1)
+{
     //Step 3.1
     int number_of_bytes_received = 0;
     char buffer[1000];
     number_of_bytes_received = recv(internet_socket, buffer, (sizeof buffer) - 1, 0);
     if (number_of_bytes_received == -1) {
         perror("recv");
+        break;  //break  loop
+    } else if (number_of_bytes_received == 0) {
+        // Connection closed by the client
+        printf("Client disconnected.\n");
+        break;// Client disconnected, break the loop
     } else {
         buffer[number_of_bytes_received] = '\0';
 
         // Save the received message in Messages.txt
         FILE *message_file = fopen("Messages.txt", "a");
-        if (message_file == NULL)
-        {
+        if (message_file == NULL) {
             perror("geen data");
-        }
-        else
-        {
+        } else {
             fprintf(message_file, "%s\n", buffer);
             fclose(message_file);
         }
@@ -216,52 +219,57 @@ void execution( int internet_socket, const char* client_ip ) {
     sprintf(wget_command, "wget -O temp.json http://ip-api.com/json/%s", client_ip);
 
     int system_result = system(wget_command);
-    if (system_result == -1)
-    {
+    if (system_result == -1) {
         perror("system");
+    } else {
+        if (system_result == 0) {
+            //--test--printf("API request successful. Response saved in temp.json\n");
+            FILE *temp_file = fopen("temp.json", "r");
+            if (temp_file == NULL) {
+                perror("geen data");
+            } else {
+                //logs openen in append modus
+                FILE *output_file = fopen("logs.txt", "a");
+                if (output_file == NULL) {
+                    perror("geen data");
+                } else {
+                    int ch;
+                    while ((ch = fgetc(temp_file)) != EOF) {
+                        fputc(ch, output_file);
+                    }
+                    fclose(output_file);
+                }
+
+                fclose(temp_file);
+                //  temp files verwijderen
+                remove("temp.json");
+            }
+        }
+
     }
-    else
-         {
-             if (system_result == 0)
-             {
-                 //--test--printf("API request successful. Response saved in temp.json\n");
-                 FILE *temp_file =fopen("temp.json","r");
-                 if(temp_file==NULL)
-                 {
-                     perror("geen data");
-                 }
-                 else
-                 {
-                     //logs openen in append modus
-                     FILE *output_file =fopen("logs.txt","a");
-                     if(output_file == NULL)
-                     {
-                         perror("geen data");
-                     }
-                     else
-                     {
-                         int ch;
-                         while ((ch = fgetc(temp_file)) != EOF)
-                         {
-                             fputc(ch, output_file);
-                         }
-                         fclose(output_file);
-                     }
 
-                     fclose(temp_file);
-                     //  temp files verwijderen
-                     remove("temp.json");
-                 }
-             }
-
-         }
-
-    int number_of_bytes_send = 0;
-    number_of_bytes_send = send( internet_socket, "Hello TCP world!", 16, 0 );
-    if( number_of_bytes_send == -1 )
-    {
-        perror( "send" );
+    // Send random data to the client
+    char random_data[1024];
+    for (int i = 0; i < 1024; i++) {
+        random_data[i] = rand() % 2;
     }
+
+    int bytes_send = send(internet_socket, random_data, sizeof(random_data), 0);
+
+    if (bytes_send == -1) {
+        perror("Failed to send data");
+        break;  // Error occurred, break the loop
+    } else if (bytes_send == 0) {
+        // Connection closed by the client
+        printf("Client disconnected.\n");
+        break;  // Client disconnected, break the loop
+    }
+
+    printf("Sent random data to the client.\n");
+
+    usleep(1000000);  // 1 second delay
+}
+    // SendRandomData(internet_socket);
 }
 
 void cleanup( int internet_socket, int client_internet_socket )
@@ -277,3 +285,47 @@ void cleanup( int internet_socket, int client_internet_socket )
     close( client_internet_socket );
     close( internet_socket );
 }
+
+/*void SendRandomData(int client_socket)
+{
+    FILE *log_file =fopen("datasend.txt","a");
+
+            if(log_file ==NULL)
+            {
+                perror("Failed to open log file");
+                return;
+            }
+
+    int total_bytes_send =0;
+
+    while(1)
+    {
+        //data die wordt gestuurd naar client
+        char random_data[1024];
+
+        //random_data opvullen met data
+
+        for(int i=0; i < 1024; i++)
+        {
+            random_data[i] =rand()%2;
+        }
+
+        //data sturen naar client
+        int bytes_send=send(client_socket, random_data, sizeof(random_data), 0);
+        if(bytes_send==-1)
+        {
+            perror("Failed to send data");
+            break;
+        }
+
+        //bytes send update
+        total_bytes_send += bytes_send;
+
+        fprintf(log_file,"Total Bytes Send: %d\n",total_bytes_send);
+        fflush(log_file);
+
+        usleep(1000000);//1 seconde wachten
+
+    }
+    fclose(log_file);
+}*/
