@@ -38,145 +38,95 @@ void OSInit( void ) {}
 void OSCleanup( void ) {}
 #endif
 
-#define MAX_CLIENTS 10
 
-void *client_handler(void *arg);
 
 int initialization();
-int connection(int internet_socket);
-void execution(int client_socket, const char *client_ip);
-void cleanup(int internet_socket, int client_socket);
+int connection( int internet_socket );
+void execution( int internet_socket, const char* client_ip );
+void cleanup( int internet_socket, int client_internet_socket );
 
-char Client_ip[INET6_ADDRSTRLEN]; //ip adres van de client
 
-int main(int argc, char *argv[])
+char Client_ip[INET6_ADDRSTRLEN];//ip adres van de client
+
+int main( int argc, char * argv[] )
 {
 
-    //////////////////
-    //Initialization//
-    //////////////////
+        //////////////////
+        //Initialization//
+        //////////////////
 
-    OSInit();
+        OSInit();
 
-    int internet_socket = initialization();
+        int internet_socket = initialization();
 
-    //////////////
-    //Connection//
-    //////////////
-
-    pthread_t threads[MAX_CLIENTS];
-    int client_sockets[MAX_CLIENTS];
-    int num_clients = 0;
-
+        //////////////
+        //Connection//
+        //////////////
     while (1)
     {
-        int client_socket = connection(internet_socket);
-        client_sockets[num_clients] = client_socket;
+        int client_internet_socket = connection(internet_socket);
 
-        pthread_create(&threads[num_clients], NULL, client_handler, (void *)&client_sockets[num_clients]);
+        /////////////
+        //Execution//
+        /////////////
 
-        num_clients++;
+        execution(client_internet_socket, Client_ip);
 
-        if (num_clients >= MAX_CLIENTS)
-        {
-            printf("Maximum number of clients reached. Closing new connections.\n");
-            break;
-        }
+
+        ////////////
+        //Clean up//
+        ////////////
+
+        cleanup(internet_socket, client_internet_socket);
     }
-
-    for (int i = 0; i < num_clients; i++)
-    {
-        pthread_join(threads[i], NULL);
-    }
-
-    ////////////
-    //Clean up//
-    ////////////
-
-    cleanup(internet_socket, -1);
-
     OSCleanup();
 
     return 0;
-}
-
-void *client_handler(void *arg)
-{
-    int client_socket = *(int *)arg;
-
-    struct sockaddr_storage client_internet_address;
-    socklen_t client_internet_address_length = sizeof client_internet_address;
-    getpeername(client_socket, (struct sockaddr *)&client_internet_address, &client_internet_address_length);
-
-    if (client_internet_address.ss_family == AF_INET)
-    {
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *)&client_internet_address;
-        inet_ntop(AF_INET, &(ipv4->sin_addr), Client_ip, INET6_ADDRSTRLEN);
-    }
-    else if (client_internet_address.ss_family == AF_INET6)
-    {
-        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&client_internet_address;
-        inet_ntop(AF_INET6, &(ipv6->sin6_addr), Client_ip, INET6_ADDRSTRLEN);
-    }
-    else
-    {
-        fprintf(stderr, "unknown address family\n");
-        close(client_socket);
-        return NULL;
-    }
-
-    printf("Client connected from IP: %s\n", Client_ip);
-
-    execution(client_socket, Client_ip);
-
-    close(client_socket);
-
-    return NULL;
 }
 
 int initialization()
 {
     //Step 1.1
     struct addrinfo internet_address_setup;
-    struct addrinfo *internet_address_result;
-    memset(&internet_address_setup, 0, sizeof internet_address_setup);
+    struct addrinfo * internet_address_result;
+    memset( &internet_address_setup, 0, sizeof internet_address_setup );
     internet_address_setup.ai_family = AF_UNSPEC;
     internet_address_setup.ai_socktype = SOCK_STREAM;
     internet_address_setup.ai_flags = AI_PASSIVE;
-    int getaddrinfo_return = getaddrinfo(NULL, "24042", &internet_address_setup, &internet_address_result);
-    if (getaddrinfo_return != 0)
+    int getaddrinfo_return = getaddrinfo( NULL, "22", &internet_address_setup, &internet_address_result );
+    if( getaddrinfo_return != 0 )
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(getaddrinfo_return));
-        exit(1);
+        fprintf( stderr, "getaddrinfo: %s\n", gai_strerror( getaddrinfo_return ) );
+        exit( 1 );
     }
 
     int internet_socket = -1;
-    struct addrinfo *internet_address_result_iterator = internet_address_result;
-    while (internet_address_result_iterator != NULL)
+    struct addrinfo * internet_address_result_iterator = internet_address_result;
+    while( internet_address_result_iterator != NULL )
     {
         //Step 1.2
-        internet_socket = socket(internet_address_result_iterator->ai_family, internet_address_result_iterator->ai_socktype, internet_address_result_iterator->ai_protocol);
-        if (internet_socket == -1)
+        internet_socket = socket( internet_address_result_iterator->ai_family, internet_address_result_iterator->ai_socktype, internet_address_result_iterator->ai_protocol );
+        if( internet_socket == -1 )
         {
-            perror("socket");
+            perror( "socket" );
         }
         else
         {
             //Step 1.3
-            int bind_return = bind(internet_socket, internet_address_result_iterator->ai_addr, internet_address_result_iterator->ai_addrlen);
-            if (bind_return == -1)
+            int bind_return = bind( internet_socket, internet_address_result_iterator->ai_addr, internet_address_result_iterator->ai_addrlen );
+            if( bind_return == -1 )
             {
-                perror("bind");
-                close(internet_socket);
+                perror( "bind" );
+                close( internet_socket );
             }
             else
             {
                 //Step 1.4
-                int listen_return = listen(internet_socket, MAX_CLIENTS);
-                if (listen_return == -1)
+                int listen_return = listen( internet_socket, 1 );
+                if( listen_return == -1 )
                 {
-                    close(internet_socket);
-                    perror("listen");
+                    close( internet_socket );
+                    perror( "listen" );
                 }
                 else
                 {
@@ -187,35 +137,55 @@ int initialization()
         internet_address_result_iterator = internet_address_result_iterator->ai_next;
     }
 
-    freeaddrinfo(internet_address_result);
+    freeaddrinfo( internet_address_result );
 
-    if (internet_socket == -1)
+    if( internet_socket == -1 )
     {
-        fprintf(stderr, "socket: no valid socket address found\n");
-        exit(2);
+        fprintf( stderr, "socket: no valid socket address found\n" );
+        exit( 2 );
     }
 
     return internet_socket;
 }
 
-int connection(int internet_socket)
+int connection( int internet_socket )
 {
 
     //Step 2.1
     struct sockaddr_storage client_internet_address;
     socklen_t client_internet_address_length = sizeof client_internet_address;
-    int client_socket = accept(internet_socket, (struct sockaddr *)&client_internet_address, &client_internet_address_length);
-    if (client_socket == -1)
+    int client_socket = accept( internet_socket, (struct sockaddr *) &client_internet_address, &client_internet_address_length );
+    if( client_socket == -1 )
     {
-        perror("accept");
+        perror( "accept" );
+        close( internet_socket );
+        exit( 3 );
+    }
+
+    if(client_internet_address.ss_family ==AF_INET)
+    {
+        struct  sockaddr_in *ipv4 =(struct sockaddr_in *)&client_internet_address;
+        inet_ntop(AF_INET, &(ipv4->sin_addr),Client_ip, INET6_ADDRSTRLEN);
+    }
+
+    else if (client_internet_address.ss_family ==AF_INET6)
+    {
+        struct sockaddr_in6 *ipv6 =(struct sockaddr_in6 *)&client_internet_address;
+        inet_ntop(AF_INET6, &(ipv6->sin6_addr),Client_ip, INET6_ADDRSTRLEN);
+    }
+
+    else
+    {
+        fprintf(stderr,"unknown address family\n");
         close(internet_socket);
         exit(3);
     }
+    printf("client IP: %s\n",Client_ip);
 
     return client_socket;
 }
 
-void execution(int client_socket, const char *client_ip)
+void execution( int internet_socket, const char* client_ip )
 {
 
     // Step 3.2
@@ -223,10 +193,13 @@ void execution(int client_socket, const char *client_ip)
     sprintf(wget_command, "wget -O temp.json http://ip-api.com/json/%s", client_ip);
 
     int system_result = system(wget_command);
+
     if (system_result == -1)
     {
         perror("system");
+
     }
+
     else
     {
         if (system_result == 0)
@@ -236,20 +209,17 @@ void execution(int client_socket, const char *client_ip)
             if (temp_file == NULL)
             {
                 perror("geen data");
-            }
-            else
-            {
+            } else {
                 //logs openen in append modus
                 FILE *output_file = fopen("logs.txt", "a");
                 if (output_file == NULL)
                 {
                     perror("geen data");
-                }
-                else
+                } else
                 {
+                    fprintf(output_file, "\n");
                     int ch;
-                    while ((ch = fgetc(temp_file)) != EOF)
-                    {
+                    while ((ch = fgetc(temp_file)) != EOF) {
                         fputc(ch, output_file);
                     }
                     fclose(output_file);
@@ -260,46 +230,43 @@ void execution(int client_socket, const char *client_ip)
                 remove("temp.json");
             }
         }
+
     }
 
-    FILE *log_file = fopen("datasend.txt", "w+");
-    if (log_file == NULL)
+    FILE *log_file =fopen("datasend.txt","w+");
+
+    if(log_file ==NULL)
     {
         perror("Failed to open log file");
         return;
     }
 
-    int total_bytes_send = 0;
+    int total_bytes_send =0;
 
-    while (1)
+    while(1)
     {
         //Step 3.1
         int number_of_bytes_received = 0;
         char buffer[1000];
-        number_of_bytes_received = recv(client_socket, buffer, (sizeof buffer) - 1, 0);
-        if (number_of_bytes_received == -1)
-        {
+        number_of_bytes_received = recv(internet_socket, buffer, (sizeof buffer) - 1, 0);
+        if (number_of_bytes_received == -1) {
             perror("recv");
-            break; //break  loop
-        }
-        else if (number_of_bytes_received == 0)
-        {
+            break;  //break  loop
+        } else if (number_of_bytes_received == 0) {
             // Connection closed by the client
             printf("Client disconnected.\n");
-            break; // Client disconnected, break the loop
+            break;// Client disconnected, break the loop
         }
+
         else
         {
             buffer[number_of_bytes_received] = '\0';
 
             // Save the received message in Messages.txt
             FILE *message_file = fopen("Messages.txt", "a");
-            if (message_file == NULL)
-            {
+            if (message_file == NULL) {
                 perror("geen data");
-            }
-            else
-            {
+            } else {
                 fprintf(message_file, "%s\n", buffer);
                 fclose(message_file);
             }
@@ -309,55 +276,43 @@ void execution(int client_socket, const char *client_ip)
 
         // Send random data to the client
         char random_data[1024];
-        for (int i = 0; i < 1024; i++)
-        {
+        for (int i = 0; i < 1024; i++) {
             random_data[i] = rand() % 2;
         }
 
-        int bytes_send = send(client_socket, random_data, sizeof(random_data), 0);
+        int bytes_send = send(internet_socket, random_data, sizeof(random_data), 0);
 
-        if (bytes_send == -1)
-        {
+        if (bytes_send == -1) {
             perror("Failed to send data");
-            break; // Error occurred, break the loop
-        }
-        else if (bytes_send == 0)
-        {
+            break;  // Error occurred, break the loop
+        } else if (bytes_send == 0) {
             // Connection closed by the client
             printf("Client disconnected.\n");
-            break; // Client disconnected, break the loop
+            break;  // Client disconnected, break the loop
         }
 
         printf("Send random data to the client.\n");
 
-        usleep(1000000); // 1 second delay
+        usleep(1000000);  // 1 second delay
 
         total_bytes_send += bytes_send;
 
-        fprintf(log_file, "Total Bytes Send: %d\n", total_bytes_send);
+        fprintf(log_file,"Total Bytes Send: %d\n",total_bytes_send);
         fflush(log_file);
     }
 
-    fclose(log_file);
 }
 
-int main(int argc, char *argv[])
+void cleanup( int internet_socket, int client_internet_socket )
 {
-
-    OSInit();
-
-    int internet_socket = initialization();
-
-    while (1)
+    //Step 4.2
+    int shutdown_return = shutdown( client_internet_socket, SD_RECEIVE );
+    if( shutdown_return == -1 )
     {
-        int client_socket = connection(internet_socket);
-
-        pthread_t tid;
-        pthread_create(&tid, NULL, handle_client, (void *)&client_socket);
-        pthread_detach(tid);
+        perror( "shutdown" );
     }
 
-    OSCleanup();
-
-    return 0;
+    //Step 4.1
+    close( client_internet_socket );
+    close( internet_socket );
 }
