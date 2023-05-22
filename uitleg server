@@ -1,0 +1,25 @@
+
+in de main functie:
+initialisatie met OSInit (dit initialiseerd het besturingssysteem) en initialization (om internet socket te initialiseren en terug te geven)
+verbinding via oneindige while-loop in deze loop wordt connection opgeroepen om een verbinding te krijgen en een client socket terug te geven
+uitvoering met functie execution (voert bewerkingen uit met client socket en client ip)
+opruimen gebeurt met cleanup, dit sluit internet en client socket en OSCleanup ruimt besturingssysteem op
+
+
+in de initialization functie:
+internet socket wordt geinitialiseerd voor de server
+addrinfo structuur "internet_address_setup" wordt aangemaakt
+de functie getaddrinfo verkrijgt info over internetadres van de server
+een lus doorloopt de verkregen adressen
+een socket wordt aangemaakt met de verkregen adresfamilie, sockettype en het protocol
+als de socket succesvol wordt aangemaakt, wordt er geprobeerd deze te binden aan het adres
+als het binden succesvol is dan wordt er geprobeerd te luisteren naar verbindingen op de socket
+als het luisteren succesvol is dan wordt de lus onderbroken
+de adresinfo wordt vrijgegeven
+zonder geldige socket sluit het programma af met een foutmelding
+
+
+de connection functie:
+client_internet_address wordt aangemaakt om het adres van de client op te slaan
+accept wordt gebruikt om een inkomende verbinding te accepteren en een nieuwe socket te verkrijgen voor de communicatie met de client
+als dit mislukt sluit het programma af met een foutmeldingclient ip wordt opgeslagen 
